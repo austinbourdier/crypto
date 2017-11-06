@@ -63,6 +63,31 @@ app.get('/', function (req, res) {
   res.sendFile(indexPath);
 });
 
+app.post('/call', async function (req, res, next) {
+  if (req.body.password !== process.env.CALL_PASSWORD) {
+    return res.status(401).send({ message: 'Wrong password' });
+  }
+  Call.create(req.body, function (err, call) {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    return res.status(200).send(call);
+  });
+});
+
+app.get('/calls', async function (req, res, next) {
+  Call.find({}, function (err, calls) {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    if (calls.length > 15) {
+      return res.status(200).send(calls.slice(calls.length - 10));
+    } else {
+      return res.status(200).send(calls);
+    }
+  });
+});
+
 app.listen(port, function () {
   console.log('Listening at http://localhost:' + port);
 });
