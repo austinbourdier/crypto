@@ -63,7 +63,7 @@ app.get('/', function (req, res) {
   res.sendFile(indexPath);
 });
 
-app.post('/call', async function (req, res, next) {
+app.post('/call', function (req, res) {
   if (req.body.password !== process.env.CALL_PASSWORD) {
     return res.status(401).send({ message: 'Wrong password' });
   }
@@ -75,7 +75,7 @@ app.post('/call', async function (req, res, next) {
   });
 });
 
-app.get('/calls', async function (req, res, next) {
+app.get('/calls', function (req, res) {
   Call.find({}, function (err, calls) {
     if (err) {
       return res.status(500).send(err);
