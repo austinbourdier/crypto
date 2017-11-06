@@ -47,8 +47,28 @@ app.use(cookieParser());
 app.use(publicPath);
 
 app.get('/', (req, res) => {
-    res.sendFile(indexPath);
+  res.sendFile(indexPath);
 })
+
+
+app.post('/call', async (req, res, next) => {
+  if(req.body.password !== process.env.CALL_PASSWORD) { return res.status(401).send({message: 'Wrong password'})}
+  Call.create(req.body, (err, call) => {
+    if (err) { return res.status(500).send(err) }
+    return res.status(200).send(call);
+  })
+})
+
+app.get('/calls', async (req, res, next) => {
+  Call.find({}, (err, calls) => {
+    if (err) { return res.status(500).send(err) }
+    if (calls.length > 15) {
+      return res.status(200).send(calls.slice(calls.length - 10));
+    } else {
+      return res.status(200).send(calls);
+    }
+  })
+}))
 
 app.listen(port, function(){
   console.log(`Listening at http://localhost:${port}`);
