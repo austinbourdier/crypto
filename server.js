@@ -51,7 +51,7 @@ app.get('/', (req, res) => {
 })
 
 
-app.post('/call', async (req, res, next) => {
+app.post('/call', (req, res, next) => {
   if(req.body.password !== process.env.CALL_PASSWORD) { return res.status(401).send({message: 'Wrong password'})}
   Call.create(req.body, (err, call) => {
     if (err) { return res.status(500).send(err) }
@@ -59,7 +59,7 @@ app.post('/call', async (req, res, next) => {
   })
 })
 
-app.get('/calls', async (req, res, next) => {
+app.get('/calls', (req, res, next) => {
   Call.find({}, (err, calls) => {
     if (err) { return res.status(500).send(err) }
     if (calls.length > 15) {
