@@ -64,10 +64,21 @@ app.get('/', function (req, res) {
   res.sendFile(indexPath);
 });
 
+app.delete('/user', function (req, res) {
+  User.findByIdAndRemove(req.query.id, function (err, user) {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    User.find({}, function (err, users) {
+      if (err) {
+        return res.status(500).send(err);
+      }
+      return res.status(200).send(users);
+    });
+  });
+});
+
 app.post('/call', function (req, res) {
-  if (req.body.password !== process.env.CALL_PASSWORD) {
-    return res.status(401).send({ message: 'Wrong password' });
-  }
   Call.create(req.body, function (err, call) {
     if (err) {
       return res.status(500).send(err);
@@ -77,9 +88,6 @@ app.post('/call', function (req, res) {
 });
 
 app.post('/user', function (req, res) {
-  if (req.body.password !== process.env.CALL_PASSWORD) {
-    return res.status(401).send({ message: 'Wrong password' });
-  }
   var newUser = {
     username: req.body.username,
     password: uuidv4()
@@ -88,7 +96,12 @@ app.post('/user', function (req, res) {
     if (err) {
       return res.status(500).send(err);
     }
-    return res.status(200).send(user);
+    User.find({}, function (err, users) {
+      if (err) {
+        return res.status(500).send(err);
+      }
+      return res.status(200).send(users);
+    });
   });
 });
 
@@ -112,6 +125,22 @@ app.get('/calls', function (req, res) {
       return res.status(401).send({ message: 'User not found' });
     }
   });
+});
+
+app.get('/users', function (req, res) {
+  User.find({}, function (err, users) {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    return res.status(200).send(users);
+  });
+});
+
+app.get('/password-check', function (req, res) {
+  if (req.query.password !== process.env.CALL_PASSWORD) {
+    return res.status(401).send({ message: 'Wrong password' });
+  }
+  return res.status(200).send({ message: 'Correct password' });
 });
 
 app.listen(port, function () {

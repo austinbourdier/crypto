@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import axios from 'axios'
+import axios from 'axios';
 import PropTypes from 'prop-types';
 import withStyles from 'isomorphic-style-loader/lib/withStyles';
 import s from './App.css';
@@ -22,6 +22,7 @@ class Home extends React.Component {
       disable: false,
       ticker: '',
       target: '',
+      users: [],
       stopLoss: '',
       username: '',
       newPass: '',
@@ -29,9 +30,22 @@ class Home extends React.Component {
     };
   }
 
+  componentWillMount() {
+    axios.get('/users')
+      .then((response) => {
+        this.setState({
+          users: response.data
+        })
+      })
+  }
+
   submitCall(e) {
     e.preventDefault();
     if(this.state.disabled) { return false; }
+    if(!this.state.ticker) {
+      alert('No ticker chosen');
+      return false;
+    }
     if(isNaN(e.target[2].value)) {
       alert('Target given is not a number');
       return false;
@@ -42,7 +56,6 @@ class Home extends React.Component {
     }
     const confirm = window.confirm("Is this correct: \nExchage: Bittrex" + "\nTicker: " + this.state.ticker + "\nTarget: " + this.state.target + "\nStop Loss: " + this.state.stopLoss);
     if(confirm) {
-      const passwordPrompt = window.prompt("Enter your password: ", "")
       this.setState({
         disabled: true
       })
@@ -50,8 +63,7 @@ class Home extends React.Component {
         exchange: 'bittrex',
         ticker: this.state.ticker,
         target: this.state.target,
-        stopLoss: this.state.stopLoss,
-        password: passwordPrompt
+        stopLoss: this.state.stopLoss
       })
         .then((response) => {
           alert('Call has been logged successfully')
@@ -74,25 +86,38 @@ class Home extends React.Component {
     }
   }
 
+  deleteUser(user) {
+    axios.delete('/user', {params: {
+      id: user._id
+    }})
+      .then((response) => {
+        alert('User has been deleted successfully')
+        this.setState({
+          users: response.data
+        })
+      })
+      .catch((error) => {
+        alert('User deletion failed')
+      });
+  }
+
   submitUser(e) {
     e.preventDefault();
     if(this.state.disabledUser) { return false; }
     const confirm = window.confirm("Is this correct: \nUsername: " + this.state.username);
     if(confirm) {
-      const passwordPrompt = window.prompt("Enter your password: ", "")
       this.setState({
         disabledUser: true
       })
       axios.post('/user',{
-        username: this.state.username,
-        password: passwordPrompt
+        username: this.state.username
       })
         .then((response) => {
           alert('User has been created successfully with password, see below for new password')
           this.setState({
             disabledUser: false,
             username: '',
-            newPass: response.data.password
+            users: response.data
           })
         })
         .catch((error) => {
@@ -109,67 +134,84 @@ class Home extends React.Component {
     return (
       <div className={s.root}>
         <div className={s.container}>
-        <div className="container-fluid container">
-          <h1>Calls</h1>
-          <div className="row">
-            <form className="col-md-12 form" onSubmit={this.submitCall.bind(this)}>
-              <div className="form-group row">
-                <label htmlFor="exchange-input" className="col-2 col-form-label">Exchange</label>
-                <div className="col-12">
-                  <div className="radio" style={{marginLeft: '12px'}}>
-                    <label><input type="radio" name="bittrex" checked readOnly/>Bittrex</label>
-                  </div>
-                </div>
-              </div>
-              <div className="form-group row">
-                <div className="dropdown">
-                <label htmlFor="ticker-input" className="col-2 col-form-label">Ticker</label>< br/>
-                  <button className="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">{this.state.ticker || 'Pick trading pair'}&nbsp;<span className="caret"></span></button>
-                  <ul className="dropdown-menu" role="menu" aria-labelledby="menu1" style={{height: '270px', overflowY: 'scroll'}}>
-                    {
-                      this.state.pairs.map((pair, i) => {
-                        return <li role="presentation" key={i}><a role="menuitem" tabIndex="-1" href="#" onClick={() => {this.setState({ticker: pair})}}>{pair}</a></li>
-                      })
-                    }
-                  </ul>
-                </div>
-              </div>
-              <div className="form-group row">
-                <label htmlFor="target-input" className="col-2 col-form-label">Target</label>
-                <div className="col-4">
-                  <input className="col-4 form-control" onChange={(e) => {this.setState({target: e.target.value})}} value={this.state.target} type="text" placeholder='Target, (e.g. 1.2, 100, 0.003)' id="target-input" />
-                </div>
-              </div>
-              <div className="form-group row">
-                <label htmlFor="stop-loss-input" className="col-2 col-form-label">Stop Loss</label>
-                <div className="col-4">
-                  <input className="col-4 form-control" onChange={(e) => {this.setState({stopLoss: e.target.value})}} value={this.state.stopLoss} type="text" placeholder='Stop Loss, (e.g. 1.2, 100, 0.003)' id="stop-loss-input" />
-                </div>
-              </div>
-              <div className="form-group row">
-                <button type="submit" className="btn btn-primary" disabled={this.state.disabled}>Submit Call</button>
-              </div>
-            </form>
-          </div>
-        </div>
-        <div className="container-fluid container">
-          <h1>Users</h1>
-            <div>{this.state.newPass ? 'New Password: ' + this.state.newPass : null }</div>
+          <div className="container-fluid container">
+            <h1>Calls</h1>
             <div className="row">
-              <form className="col-md-12 form" onSubmit={this.submitUser.bind(this)}>
+              <form className="col-md-12 form" onSubmit={this.submitCall.bind(this)}>
                 <div className="form-group row">
-                  <label htmlFor="target-input" className="col-2 col-form-label">Username</label>
-                  <div className="col-4">
-                    <input className="col-4 form-control" onChange={(e) => {this.setState({username: e.target.value})}} value={this.state.username} type="text" placeholder='Username, (e.g. Magpie)' id="username-input" />
+                  <label htmlFor="exchange-input" className="col-2 col-form-label">Exchange</label>
+                  <div className="col-12">
+                    <div className="radio" style={{marginLeft: '12px'}}>
+                      <label><input type="radio" name="bittrex" checked readOnly/>Bittrex</label>
+                    </div>
                   </div>
                 </div>
                 <div className="form-group row">
-                  <button type="submit" className="btn btn-success" disabled={this.state.disabledUser}>Create User</button>
+                  <div className="dropdown">
+                  <label htmlFor="ticker-input" className="col-2 col-form-label">Ticker</label>< br/>
+                    <button className="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">{this.state.ticker || 'Pick trading pair'}&nbsp;<span className="caret"></span></button>
+                    <ul className="dropdown-menu" role="menu" aria-labelledby="menu1" style={{height: '270px', overflowY: 'scroll'}}>
+                      {
+                        this.state.pairs.map((pair, i) => {
+                          return <li role="presentation" key={i}><a role="menuitem" tabIndex="-1" href="#" onClick={() => {this.setState({ticker: pair})}}>{pair}</a></li>
+                        })
+                      }
+                    </ul>
+                  </div>
+                </div>
+                <div className="form-group row">
+                  <label htmlFor="target-input" className="col-2 col-form-label">Target</label>
+                  <div className="col-4">
+                    <input className="col-4 form-control" onChange={(e) => {this.setState({target: e.target.value})}} value={this.state.target} type="text" placeholder='Target, (e.g. 1.2, 100, 0.003)' id="target-input" />
+                  </div>
+                </div>
+                <div className="form-group row">
+                  <label htmlFor="stop-loss-input" className="col-2 col-form-label">Stop Loss</label>
+                  <div className="col-4">
+                    <input className="col-4 form-control" onChange={(e) => {this.setState({stopLoss: e.target.value})}} value={this.state.stopLoss} type="text" placeholder='Stop Loss, (e.g. 1.2, 100, 0.003)' id="stop-loss-input" />
+                  </div>
+                </div>
+                <div className="form-group row">
+                  <button type="submit" className="btn btn-primary" disabled={this.state.disabled}>Submit Call</button>
                 </div>
               </form>
             </div>
           </div>
-        </div>
+          <div className="container-fluid container">
+            <h1>Users</h1>
+              <div>{this.state.newPass ? 'New Password: ' + this.state.newPass : null }</div>
+              <div className="row">
+                <form className="col-md-12 form" onSubmit={this.submitUser.bind(this)}>
+                  <div className="form-group row">
+                    <label htmlFor="target-input" className="col-2 col-form-label">Username</label>
+                    <div className="col-4">
+                      <input className="col-4 form-control" onChange={(e) => {this.setState({username: e.target.value})}} value={this.state.username} type="text" placeholder='Username, (e.g. Magpie)' id="username-input" />
+                    </div>
+                  </div>
+                  <div className="form-group row">
+                    <button type="submit" className="btn btn-success" disabled={this.state.disabledUser}>Create User</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div className="container-fluid container">
+            <h1>Delete User</h1>
+            <div className="row">
+              <ul>
+                {
+                  this.state.users.map((user, i) => {
+                    return (
+                      <li role="presentation" key={i}>
+                        <button type="submit" className="btn btn-warning" onClick={() => {this.deleteUser(user)}}>Delete User</button>
+                        <a role="menuitem" tabIndex="-1" href="#">{" " + user.username + ' | ' + user.password}</a>
+                      </li>
+                    )
+                  })
+                }
+              </ul>
+            </div>
+          </div>
       </div>
     );
   }

@@ -50,8 +50,17 @@ app.get('/', (req, res) => {
   res.sendFile(indexPath);
 })
 
+app.delete('/user', (req, res) => {
+  User.findByIdAndRemove(req.query.id, (err, user) => {
+    if (err) { return res.status(500).send(err) }
+    User.find({}, (err, users) => {
+      if (err) { return res.status(500).send(err) }
+      return res.status(200).send(users);
+    })
+  })
+})
+
 app.post('/call', (req, res) => {
-  if(req.body.password !== process.env.CALL_PASSWORD) { return res.status(401).send({message: 'Wrong password'})}
   Call.create(req.body, (err, call) => {
     if (err) { return res.status(500).send(err) }
     return res.status(200).send(call);
@@ -59,14 +68,16 @@ app.post('/call', (req, res) => {
 })
 
 app.post('/user', (req, res) => {
-  if(req.body.password !== process.env.CALL_PASSWORD) { return res.status(401).send({message: 'Wrong password'})}
   const newUser = {
     username: req.body.username,
     password: uuidv4()
   }
   User.create(newUser, (err, user) => {
     if (err) { return res.status(500).send(err) }
-    return res.status(200).send(user);
+    User.find({}, (err, users) => {
+      if (err) { return res.status(500).send(err) }
+      return res.status(200).send(users);
+    })
   })
 })
 
@@ -86,6 +97,18 @@ app.get('/calls', (req, res) => {
       return res.status(401).send({message: 'User not found'})
     }
   })
+})
+
+app.get('/users', (req, res) => {
+  User.find({}, (err, users) => {
+    if (err) { return res.status(500).send(err) }
+    return res.status(200).send(users);
+  })
+})
+
+app.get('/password-check', (req, res) => {
+  if(req.query.password !== process.env.CALL_PASSWORD) { return res.status(401).send({message: 'Wrong password'})}
+  return res.status(200).send({message: 'Correct password'})
 })
 
 
