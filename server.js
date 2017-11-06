@@ -50,7 +50,6 @@ app.get('/', (req, res) => {
   res.sendFile(indexPath);
 })
 
-
 app.post('/call', (req, res, next) => {
   if(req.body.password !== process.env.CALL_PASSWORD) { return res.status(401).send({message: 'Wrong password'})}
   Call.create(req.body, (err, call) => {
