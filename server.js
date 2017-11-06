@@ -10,12 +10,12 @@ var app = express();
 const publicPath = express.static(path.join(__dirname, '../'));
 const indexPath = path.join(__dirname, '../index.html');
 const port = process.env.PORT || 4444;
-
+const uuidv4 = require('uuid/v4');
 
 import mongoose from 'mongoose';
 
 const UserSchema = new mongoose.Schema({
-  name: String,
+  username: String,
   password: String,
   updated_at: { type: Date, default: Date.now },
 });
@@ -58,13 +58,32 @@ app.post('/call', (req, res) => {
   })
 })
 
-app.get('/calls', (req, res) => {
-  Call.find({}, (err, calls) => {
+app.post('/user', (req, res) => {
+  if(req.body.password !== process.env.CALL_PASSWORD) { return res.status(401).send({message: 'Wrong password'})}
+  const newUser = {
+    username: req.body.username,
+    password: uuidv4()
+  }
+  User.create(newUser, (err, user) => {
     if (err) { return res.status(500).send(err) }
-    if (calls.length > 15) {
-      return res.status(200).send(calls.slice(calls.length - 10));
+    return res.status(200).send(user);
+  })
+})
+
+app.get('/calls', (req, res) => {
+  User.findOne({password: req.query.password}, (err, user) => {
+    if (err) { return res.status(500).send(err) }
+    if (user) {
+      Call.find({}, (err, calls) => {
+        if (err) { return res.status(500).send(err) }
+        if (calls.length > 15) {
+          return res.status(200).send(calls.slice(calls.length - 10));
+        } else {
+          return res.status(200).send(calls);
+        }
+      })
     } else {
-      return res.status(200).send(calls);
+      return res.status(401).send({message: 'User not found'})
     }
   })
 })

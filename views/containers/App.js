@@ -72,49 +72,95 @@ class Home extends React.Component {
     }
   }
 
+  submitUser(e) {
+    e.preventDefault();
+    if(this.state.disabledUser) { return false; }
+    const confirm = window.confirm("Is this correct: \nUsername: " + this.state.username);
+    if(confirm) {
+      const passwordPrompt = window.prompt("Enter your password: ", "")
+      this.setState({
+        disabledUser: true
+      })
+      axios.post('/user',{
+        username: this.state.username,
+        password: passwordPrompt
+      })
+        .then((response) => {
+          alert('User has been created successfully with password: \n' + response.data.password)
+          this.setState({
+            disabledUser: false,
+            username: ''
+          })
+        })
+        .catch((error) => {
+          alert('User creation failed')
+          this.setState({
+            disabledUser: false,
+            username: ''
+          })
+        });
+    }
+  }
+
   render() {
     return (
       <div className={s.root}>
         <div className={s.container}>
         <h1>Calls</h1>
+        <div className="container-fluid container">
+          <div className="row">
+            <form className="col-md-12 form" onSubmit={this.submitCall.bind(this)}>
+              <div className="form-group row">
+                <label htmlFor="exchange-input" className="col-2 col-form-label">Exchange</label>
+                <div className="col-12">
+                  <div className="radio" style={{marginLeft: '12px'}}>
+                    <label><input type="radio" name="bittrex" checked readOnly/>Bittrex</label>
+                  </div>
+                </div>
+              </div>
+              <div className="form-group row">
+                <div className="dropdown">
+                <label htmlFor="ticker-input" className="col-2 col-form-label">Ticker</label>< br/>
+                  <button className="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">{this.state.ticker || 'Pick trading pair'}&nbsp;<span className="caret"></span></button>
+                  <ul className="dropdown-menu" role="menu" aria-labelledby="menu1" style={{height: '270px', overflowY: 'scroll'}}>
+                    {
+                      this.state.pairs.map((pair, i) => {
+                        return <li role="presentation" key={i}><a role="menuitem" tabIndex="-1" href="#" onClick={() => {this.setState({ticker: pair})}}>{pair}</a></li>
+                      })
+                    }
+                  </ul>
+                </div>
+              </div>
+              <div className="form-group row">
+                <label htmlFor="target-input" className="col-2 col-form-label">Target</label>
+                <div className="col-4">
+                  <input className="col-4 form-control" onChange={(e) => {this.setState({target: e.target.value})}} value={this.state.target} type="text" placeholder='Target, (e.g. 1.2, 100, 0.003)' id="target-input" />
+                </div>
+              </div>
+              <div className="form-group row">
+                <label htmlFor="stop-loss-input" className="col-2 col-form-label">Stop Loss</label>
+                <div className="col-4">
+                  <input className="col-4 form-control" onChange={(e) => {this.setState({stopLoss: e.target.value})}} value={this.state.stopLoss} type="text" placeholder='Stop Loss, (e.g. 1.2, 100, 0.003)' id="stop-loss-input" />
+                </div>
+              </div>
+              <div className="form-group row">
+                <button type="submit" className="btn btn-primary" disabled={this.state.disabled}>Submit Call</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <h1>Users</h1>
           <div className="container-fluid container">
             <div className="row">
-              <form className="col-md-12 form" onSubmit={this.submitCall.bind(this)}>
+              <form className="col-md-12 form" onSubmit={this.submitUser.bind(this)}>
                 <div className="form-group row">
-                  <label htmlFor="exchange-input" className="col-2 col-form-label">Exchange</label>
-                  <div className="col-12">
-                    <div className="radio" style={{marginLeft: '12px'}}>
-                      <label><input type="radio" name="bittrex" checked readOnly/>Bittrex</label>
-                    </div>
-                  </div>
-                </div>
-                <div className="form-group row">
-                  <div className="dropdown">
-                  <label htmlFor="ticker-input" className="col-2 col-form-label">Ticker</label>< br/>
-                    <button className="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">{this.state.ticker || 'Pick trading pair'}&nbsp;<span className="caret"></span></button>
-                    <ul className="dropdown-menu" role="menu" aria-labelledby="menu1" style={{height: '270px', overflowY: 'scroll'}}>
-                      {
-                        this.state.pairs.map((pair, i) => {
-                          return <li role="presentation" key={i}><a role="menuitem" tabIndex="-1" href="#" onClick={() => {this.setState({ticker: pair})}}>{pair}</a></li>
-                        })
-                      }
-                    </ul>
-                  </div>
-                </div>
-                <div className="form-group row">
-                  <label htmlFor="target-input" className="col-2 col-form-label">Target</label>
+                  <label htmlFor="target-input" className="col-2 col-form-label">Username</label>
                   <div className="col-4">
-                    <input className="col-4 form-control" onChange={(e) => {this.setState({target: e.target.value})}} value={this.state.target} type="text" placeholder='Target, (e.g. 1.2, 100, 0.003)' id="target-input" />
+                    <input className="col-4 form-control" onChange={(e) => {this.setState({username: e.target.value})}} value={this.state.username} type="text" placeholder='Username, (e.g. Magpie)' id="username-input" />
                   </div>
                 </div>
                 <div className="form-group row">
-                  <label htmlFor="stop-loss-input" className="col-2 col-form-label">Stop Loss</label>
-                  <div className="col-4">
-                    <input className="col-4 form-control" onChange={(e) => {this.setState({stopLoss: e.target.value})}} value={this.state.stopLoss} type="text" placeholder='Stop Loss, (e.g. 1.2, 100, 0.003)' id="stop-loss-input" />
-                  </div>
-                </div>
-                <div className="form-group row">
-                  <button type="submit" className="btn btn-primary" disabled={this.state.disabled}>Submit Call</button>
+                  <button type="submit" className="btn btn-success" disabled={this.state.disabledUser}>Create User</button>
                 </div>
               </form>
             </div>

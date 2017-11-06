@@ -28,9 +28,10 @@ var app = (0, _express2.default)();
 var publicPath = _express2.default.static(_path2.default.join(__dirname, '../'));
 var indexPath = _path2.default.join(__dirname, '../index.html');
 var port = process.env.PORT || 4444;
+var uuidv4 = require('uuid/v4');
 
 var UserSchema = new _mongoose2.default.Schema({
-  name: String,
+  username: String,
   password: String,
   updated_at: { type: Date, default: Date.now }
 });
@@ -75,15 +76,40 @@ app.post('/call', function (req, res) {
   });
 });
 
-app.get('/calls', function (req, res) {
-  Call.find({}, function (err, calls) {
+app.post('/user', function (req, res) {
+  if (req.body.password !== process.env.CALL_PASSWORD) {
+    return res.status(401).send({ message: 'Wrong password' });
+  }
+  var newUser = {
+    username: req.body.username,
+    password: uuidv4()
+  };
+  User.create(newUser, function (err, user) {
     if (err) {
       return res.status(500).send(err);
     }
-    if (calls.length > 15) {
-      return res.status(200).send(calls.slice(calls.length - 10));
+    return res.status(200).send(user);
+  });
+});
+
+app.get('/calls', function (req, res) {
+  User.findOne({ password: req.query.password }, function (err, user) {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    if (user) {
+      Call.find({}, function (err, calls) {
+        if (err) {
+          return res.status(500).send(err);
+        }
+        if (calls.length > 15) {
+          return res.status(200).send(calls.slice(calls.length - 10));
+        } else {
+          return res.status(200).send(calls);
+        }
+      });
     } else {
-      return res.status(200).send(calls);
+      return res.status(401).send({ message: 'User not found' });
     }
   });
 });

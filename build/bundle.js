@@ -23557,9 +23557,42 @@ var Home = function (_React$Component) {
       }
     }
   }, {
+    key: 'submitUser',
+    value: function submitUser(e) {
+      var _this3 = this;
+
+      e.preventDefault();
+      if (this.state.disabledUser) {
+        return false;
+      }
+      var confirm = window.confirm("Is this correct: \nUsername: " + this.state.username);
+      if (confirm) {
+        var passwordPrompt = window.prompt("Enter your password: ", "");
+        this.setState({
+          disabledUser: true
+        });
+        _axios2.default.post('/user', {
+          username: this.state.username,
+          password: passwordPrompt
+        }).then(function (response) {
+          alert('User has been created successfully with password: \n' + response.data.password);
+          _this3.setState({
+            disabledUser: false,
+            username: ''
+          });
+        }).catch(function (error) {
+          alert('User creation failed');
+          _this3.setState({
+            disabledUser: false,
+            username: ''
+          });
+        });
+      }
+    }
+  }, {
     key: 'render',
     value: function render() {
-      var _this3 = this;
+      var _this4 = this;
 
       return _react2.default.createElement(
         'div',
@@ -23633,7 +23666,7 @@ var Home = function (_React$Component) {
                           _react2.default.createElement(
                             'a',
                             { role: 'menuitem', tabIndex: '-1', href: '#', onClick: function onClick() {
-                                _this3.setState({ ticker: pair });
+                                _this4.setState({ ticker: pair });
                               } },
                             pair
                           )
@@ -23654,7 +23687,7 @@ var Home = function (_React$Component) {
                     'div',
                     { className: 'col-4' },
                     _react2.default.createElement('input', { className: 'col-4 form-control', onChange: function onChange(e) {
-                        _this3.setState({ target: e.target.value });
+                        _this4.setState({ target: e.target.value });
                       }, value: this.state.target, type: 'text', placeholder: 'Target, (e.g. 1.2, 100, 0.003)', id: 'target-input' })
                   )
                 ),
@@ -23670,7 +23703,7 @@ var Home = function (_React$Component) {
                     'div',
                     { className: 'col-4' },
                     _react2.default.createElement('input', { className: 'col-4 form-control', onChange: function onChange(e) {
-                        _this3.setState({ stopLoss: e.target.value });
+                        _this4.setState({ stopLoss: e.target.value });
                       }, value: this.state.stopLoss, type: 'text', placeholder: 'Stop Loss, (e.g. 1.2, 100, 0.003)', id: 'stop-loss-input' })
                   )
                 ),
@@ -23681,6 +23714,48 @@ var Home = function (_React$Component) {
                     'button',
                     { type: 'submit', className: 'btn btn-primary', disabled: this.state.disabled },
                     'Submit Call'
+                  )
+                )
+              )
+            )
+          ),
+          _react2.default.createElement(
+            'h1',
+            null,
+            'Users'
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'container-fluid container' },
+            _react2.default.createElement(
+              'div',
+              { className: 'row' },
+              _react2.default.createElement(
+                'form',
+                { className: 'col-md-12 form', onSubmit: this.submitUser.bind(this) },
+                _react2.default.createElement(
+                  'div',
+                  { className: 'form-group row' },
+                  _react2.default.createElement(
+                    'label',
+                    { htmlFor: 'target-input', className: 'col-2 col-form-label' },
+                    'Username'
+                  ),
+                  _react2.default.createElement(
+                    'div',
+                    { className: 'col-4' },
+                    _react2.default.createElement('input', { className: 'col-4 form-control', onChange: function onChange(e) {
+                        _this4.setState({ username: e.target.value });
+                      }, value: this.state.username, type: 'text', placeholder: 'Username, (e.g. Magpie)', id: 'username-input' })
+                  )
+                ),
+                _react2.default.createElement(
+                  'div',
+                  { className: 'form-group row' },
+                  _react2.default.createElement(
+                    'button',
+                    { type: 'submit', className: 'btn btn-success', disabled: this.state.disabledUser },
+                    'Create User'
                   )
                 )
               )
