@@ -173,13 +173,13 @@ class Home extends React.Component {
                 <div className="form-group row">
                   <label htmlFor="target-input" className="col-2 col-form-label">Target</label>
                   <div className="col-4">
-                    <input className="col-4 form-control" onChange={(e) => {this.setState({target: e.target.value})}} value={this.state.target} type="text" placeholder='Target, (e.g. 1.2, 100, 0.003)' id="target-input" />
+                    <input className="col-4 form-control" onChange={(e) => {this.setState({target: e.target.value})}} value={this.state.target} type="text" placeholder='Target, (in terms of BTC, e.g. .05 or .0000178)' id="target-input" />
                   </div>
                 </div>
                 <div className="form-group row">
                   <label htmlFor="stop-loss-input" className="col-2 col-form-label">Stop Loss</label>
                   <div className="col-4">
-                    <input className="col-4 form-control" onChange={(e) => {this.setState({stopLoss: e.target.value})}} value={this.state.stopLoss} type="text" placeholder='Stop Loss, (e.g. 1.2, 100, 0.003)' id="stop-loss-input" />
+                    <input className="col-4 form-control" onChange={(e) => {this.setState({stopLoss: e.target.value})}} value={this.state.stopLoss} type="text" placeholder='Stop Loss, (in terms of BTC, e.g. .05 or .0000178)' id="stop-loss-input" />
                   </div>
                 </div>
                 <div className="form-group row">
